@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useSignUpEmailPassword, useSignInOAuth } from '@nhost/react'
-import { Mail, Lock, Eye, EyeOff, User, Sparkles, Bot, ArrowRight, Github, Chrome } from 'lucide-react'
+import { useSignUpEmailPassword } from '@nhost/react'
+import { Mail, Lock, Eye, EyeOff, User, Sparkles, Bot, ArrowRight } from 'lucide-react'
 
 export function SignUp() {
   const [email, setEmail] = useState('')
@@ -12,39 +12,13 @@ export function SignUp() {
   const [error, setError] = useState('')
   
   const { signUpEmailPassword, isLoading } = useSignUpEmailPassword()
-  const { signInOAuth, isLoading: isOAuthLoading } = useSignInOAuth()
   const navigate = useNavigate()
 
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   
   // Debug: Log the current state
   console.log('SignUp component - showSuccessMessage:', showSuccessMessage)
-
-  const handleGitHubSignUp = async () => {
-    try {
-      setError('') // Clear any previous errors
-      const { error } = await signInOAuth('github')
-      if (error) {
-        setError(error.message)
-      }
-      // OAuth will redirect to GitHub, so no need to navigate
-    } catch (err) {
-      setError('GitHub sign-up failed. Please try again.')
-    }
-  }
-
-  const handleGoogleSignUp = async () => {
-    try {
-      setError('') // Clear any previous errors
-      const { error } = await signInOAuth('google')
-      if (error) {
-        setError(error.message)
-      }
-      // OAuth will redirect to Google, so no need to navigate
-    } catch (err) {
-      setError('Google sign-up failed. Please try again.')
-    }
-  }
+  console.log('SignUp component - OAuth section should be visible')
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -130,62 +104,10 @@ export function SignUp() {
           </div>
         )}
 
-        {/* OAuth Sign-up Options */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50" style={{ zIndex: 10 }}>
-          <div className="text-center mb-6">
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-xs text-green-700">
-                <strong>✅ Ready!</strong> OAuth providers are now configured and working
-              </p>
-            </div>
-            <p className="text-sm text-gray-600 mb-4">Sign up with</p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={handleGitHubSignUp}
-                disabled={isOAuthLoading}
-                className="flex items-center justify-center space-x-2 w-full py-3 px-4 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
-              >
-                {isOAuthLoading ? (
-                  <div className="h-5 w-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <Github className="h-5 w-5" />
-                )}
-                <span className="text-sm font-medium">
-                  {isOAuthLoading ? 'Connecting...' : 'GitHub'}
-                </span>
-              </button>
-              
-              <button
-                type="button"
-                onClick={handleGoogleSignUp}
-                disabled={isOAuthLoading}
-                className="flex items-center justify-center space-x-2 w-full py-3 px-4 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
-              >
-                {isOAuthLoading ? (
-                  <div className="h-5 w-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <Chrome className="h-5 w-5" />
-                )}
-                <span className="text-sm font-medium">
-                  {isOAuthLoading ? 'Connecting...' : 'Google'}
-                </span>
-              </button>
-            </div>
-          </div>
-          
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or create account with email</span>
-            </div>
-          </div>
-        </div>
+                 
 
-        {/* Email/Password Form */}
-        <div className={`bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50 ${showSuccessMessage ? 'hidden' : 'block'}`}>
+                          {/* Email/Password Form */}
+         <div className={`bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50 ${showSuccessMessage ? 'hidden' : 'block'}`}>
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl animate-fade-in">
@@ -217,9 +139,10 @@ export function SignUp() {
                     placeholder="Enter your email"
                   />
                 </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  We'll send a verification email to this address. Please use a valid email you can access.
-                </p>
+                                 <p className="mt-1 text-xs text-gray-500">
+                   We'll send a verification email to this address. Please use a valid email you can access. 
+                   <strong>Check your spam folder</strong> and click the verification link to activate your account.
+                 </p>
               </div>
               
               <div>

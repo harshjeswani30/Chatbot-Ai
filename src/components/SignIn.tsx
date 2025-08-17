@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useSignInEmailPassword, useSignInOtp, useSignInOAuth } from '@nhost/react'
-import { Mail, Lock, Eye, EyeOff, Sparkles, Bot, ArrowRight, Github, Chrome } from 'lucide-react'
+import { useSignInEmailPassword } from '@nhost/react'
+import { Mail, Lock, Eye, EyeOff, Sparkles, Bot, ArrowRight } from 'lucide-react'
 
 export function SignIn() {
   const [email, setEmail] = useState('')
@@ -10,34 +10,8 @@ export function SignIn() {
   const [error, setError] = useState('')
   
   const { signInEmailPassword, isLoading } = useSignInEmailPassword()
-  const { signInOAuth, isLoading: isOAuthLoading } = useSignInOAuth()
   const navigate = useNavigate()
 
-  const handleGitHubSignIn = async () => {
-    try {
-      setError('') // Clear any previous errors
-      const { error } = await signInOAuth('github')
-      if (error) {
-        setError(error.message)
-      }
-      // OAuth will redirect to GitHub, so no need to navigate
-    } catch (err) {
-      setError('GitHub sign-in failed. Please try again.')
-    }
-  }
-
-  const handleGoogleSignIn = async () => {
-    try {
-      setError('') // Clear any previous errors
-      const { error } = await signInOAuth('google')
-      if (error) {
-        setError(error.message)
-      }
-      // OAuth will redirect to Google, so no need to navigate
-    } catch (err) {
-      setError('Google sign-in failed. Please try again.')
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,59 +56,7 @@ export function SignIn() {
           </p>
         </div>
         
-        {/* OAuth Sign-in Options */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50">
-          <div className="text-center mb-6">
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-xs text-green-700">
-                <strong>✅ Ready!</strong> OAuth providers are now configured and working
-              </p>
-            </div>
-            <p className="text-sm text-gray-600 mb-4">Sign in with</p>
-            <div className="grid grid-cols-2 gap-3">
-                             <button
-                 type="button"
-                 onClick={handleGitHubSignIn}
-                 disabled={isOAuthLoading}
-                 className="flex items-center justify-center space-x-2 w-full py-3 px-4 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
-               >
-                 {isOAuthLoading ? (
-                   <div className="h-5 w-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                 ) : (
-                   <Github className="h-5 w-5" />
-                 )}
-                 <span className="text-sm font-medium">
-                   {isOAuthLoading ? 'Connecting...' : 'GitHub'}
-                 </span>
-               </button>
-              
-                             <button
-                 type="button"
-                 onClick={handleGoogleSignIn}
-                 disabled={isOAuthLoading}
-                 className="flex items-center justify-center space-x-2 w-full py-3 px-4 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
-               >
-                 {isOAuthLoading ? (
-                   <div className="h-5 w-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                 ) : (
-                   <Chrome className="h-5 w-5" />
-                 )}
-                 <span className="text-sm font-medium">
-                   {isOAuthLoading ? 'Connecting...' : 'Google'}
-                 </span>
-               </button>
-            </div>
-          </div>
-          
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with email</span>
-            </div>
-          </div>
-        </div>
+        
 
         {/* Email/Password Form */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50">
