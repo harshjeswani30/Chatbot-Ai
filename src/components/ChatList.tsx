@@ -43,10 +43,11 @@ interface Chat {
 
 interface ChatListProps {
   selectedChatId: string | null
+  isDarkMode?: boolean
   onSelectChat: (chatId: string) => void
 }
 
-export function ChatList({ selectedChatId, onSelectChat }: ChatListProps) {
+export function ChatList({ selectedChatId, isDarkMode = false, onSelectChat }: ChatListProps) {
   const [newChatTitle, setNewChatTitle] = useState('')
   const [showNewChatForm, setShowNewChatForm] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -130,15 +131,34 @@ export function ChatList({ selectedChatId, onSelectChat }: ChatListProps) {
   )
 
   return (
-    <div className="flex-1 flex flex-col bg-gradient-to-b from-white to-gray-50/80">
+    <div 
+      className="flex-1 flex flex-col transition-all duration-300"
+      style={{
+        background: isDarkMode 
+          ? 'linear-gradient(to bottom, #1f2937, rgba(17, 24, 39, 0.8))' 
+          : 'linear-gradient(to bottom, #ffffff, rgba(249, 250, 251, 0.8))'
+      }}
+    >
       {/* Header */}
-      <div className="p-6 border-b border-gray-200/50">
+      <div 
+        className="p-6 border-b transition-all duration-300"
+        style={{
+          borderBottomColor: isDarkMode ? 'rgba(75, 85, 99, 0.5)' : 'rgba(229, 231, 235, 0.5)'
+        }}
+      >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
             <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
               <Sparkles className="h-4 w-4 text-white" />
             </div>
-            <h2 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <h2 
+              className="text-xl font-bold bg-clip-text text-transparent"
+              style={{
+                backgroundImage: isDarkMode 
+                  ? 'linear-gradient(to right, #f3f4f6, #d1d5db)' 
+                  : 'linear-gradient(to right, #111827, #374151)'
+              }}
+            >
               Conversations
             </h2>
           </div>
@@ -160,14 +180,27 @@ export function ChatList({ selectedChatId, onSelectChat }: ChatListProps) {
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all duration-200"
+            className="w-full pl-10 pr-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200"
+            style={{
+              backgroundColor: isDarkMode ? '#374151' : '#f9fafb',
+              borderColor: isDarkMode ? '#6b7280' : '#e5e7eb',
+              color: isDarkMode ? '#f3f4f6' : '#111827'
+            }}
           />
         </div>
       </div>
 
       {/* New Chat Form */}
       {showNewChatForm && (
-        <div className="p-6 border-b border-gray-200/50 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div 
+          className="p-6 border-b transition-all duration-300"
+          style={{
+            borderBottomColor: isDarkMode ? 'rgba(75, 85, 99, 0.5)' : 'rgba(229, 231, 235, 0.5)',
+            background: isDarkMode 
+              ? 'linear-gradient(to right, rgba(31, 41, 55, 0.8), rgba(55, 65, 81, 0.8))' 
+              : 'linear-gradient(to right, rgba(219, 234, 254, 1), rgba(199, 210, 254, 1))'
+          }}
+        >
           <div className="space-y-4">
             <div className="relative">
               <input
@@ -175,7 +208,12 @@ export function ChatList({ selectedChatId, onSelectChat }: ChatListProps) {
                 placeholder="Give your chat a creative name..."
                 value={newChatTitle}
                 onChange={(e) => setNewChatTitle(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-400 transition-all duration-200"
+                className="w-full px-4 py-3 border rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200"
+                style={{
+                  backgroundColor: isDarkMode ? '#374151' : '#ffffff',
+                  borderColor: isDarkMode ? '#6b7280' : '#e5e7eb',
+                  color: isDarkMode ? '#f3f4f6' : '#111827'
+                }}
                 onKeyPress={(e) => e.key === 'Enter' && handleCreateChat()}
                 autoFocus
               />
@@ -198,7 +236,18 @@ export function ChatList({ selectedChatId, onSelectChat }: ChatListProps) {
                   setShowNewChatForm(false)
                   setNewChatTitle('')
                 }}
-                className="px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 shadow-sm hover:shadow-md"
+                className="px-4 py-2.5 border text-sm font-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 shadow-sm hover:shadow-md"
+                style={{
+                  backgroundColor: isDarkMode ? '#374151' : '#ffffff',
+                  borderColor: isDarkMode ? '#6b7280' : '#e5e7eb',
+                  color: isDarkMode ? '#f3f4f6' : '#374151'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = isDarkMode ? '#4b5563' : '#f9fafb'
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = isDarkMode ? '#374151' : '#ffffff'
+                }}
               >
                 Cancel
               </button>
@@ -214,8 +263,14 @@ export function ChatList({ selectedChatId, onSelectChat }: ChatListProps) {
             {searchQuery ? (
               <>
                 <Search className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No matches found</h3>
-                <p className="text-gray-500 text-sm">Try a different search term</p>
+                <h3 
+                  className="text-lg font-medium mb-2"
+                  style={{ color: isDarkMode ? '#f3f4f6' : '#111827' }}
+                >No matches found</h3>
+                <p 
+                  className="text-sm"
+                  style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}
+                >Try a different search term</p>
               </>
             ) : chats.length === 0 ? (
               <>
@@ -225,9 +280,18 @@ export function ChatList({ selectedChatId, onSelectChat }: ChatListProps) {
                   </div>
                   <div className="absolute -top-1 -right-1 h-6 w-6 bg-green-500 border-2 border-white rounded-full animate-bounce"></div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Start Your First Chat</h3>
-                <p className="text-gray-500 text-sm mb-1">Welcome to your AI assistant!</p>
-                <p className="text-gray-400 text-xs">Click the + button to create your first conversation</p>
+                <h3 
+                  className="text-lg font-semibold mb-2"
+                  style={{ color: isDarkMode ? '#f3f4f6' : '#111827' }}
+                >Start Your First Chat</h3>
+                <p 
+                  className="text-sm mb-1"
+                  style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}
+                >Welcome to your AI assistant!</p>
+                <p 
+                  className="text-xs"
+                  style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}
+                >Click the + button to create your first conversation</p>
               </>
             ) : null}
           </div>
@@ -236,13 +300,35 @@ export function ChatList({ selectedChatId, onSelectChat }: ChatListProps) {
             {filteredChats.map((chat: Chat, index) => (
               <div
                 key={chat.id}
-                className={`group relative p-4 rounded-2xl cursor-pointer transition-all duration-200 ${
-                  selectedChatId === chat.id 
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg transform scale-[1.02]' 
-                    : 'bg-white hover:bg-gray-50 hover:shadow-md border border-gray-100 hover:border-gray-200'
-                }`}
+                className="group relative p-4 rounded-2xl cursor-pointer transition-all duration-200"
+                style={{ 
+                  animationDelay: `${index * 50}ms`,
+                  ...(selectedChatId === chat.id 
+                    ? {
+                        background: 'linear-gradient(to right, #3b82f6, #2563eb)',
+                        color: 'white',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                        transform: 'scale(1.02)'
+                      }
+                    : {
+                        backgroundColor: isDarkMode ? '#374151' : '#ffffff',
+                        borderColor: isDarkMode ? '#6b7280' : '#f3f4f6',
+                        border: '1px solid'
+                      })
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedChatId !== chat.id) {
+                    e.target.style.backgroundColor = isDarkMode ? '#4b5563' : '#f9fafb'
+                    e.target.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedChatId !== chat.id) {
+                    e.target.style.backgroundColor = isDarkMode ? '#374151' : '#ffffff'
+                    e.target.style.boxShadow = 'none'
+                  }
+                }}
                 onClick={() => onSelectChat(chat.id)}
-                style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-3 flex-1 min-w-0">
@@ -256,14 +342,24 @@ export function ChatList({ selectedChatId, onSelectChat }: ChatListProps) {
                       }`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className={`text-sm font-semibold truncate mb-1 ${
-                        selectedChatId === chat.id ? 'text-white' : 'text-gray-900'
-                      }`}>
+                      <h3 
+                        className="text-sm font-semibold truncate mb-1"
+                        style={{ 
+                          color: selectedChatId === chat.id 
+                            ? '#ffffff' 
+                            : (isDarkMode ? '#f3f4f6' : '#111827')
+                        }}
+                      >
                         {chat.title}
                       </h3>
-                      <div className={`flex items-center space-x-1 text-xs ${
-                        selectedChatId === chat.id ? 'text-blue-100' : 'text-gray-500'
-                      }`}>
+                      <div 
+                        className="flex items-center space-x-1 text-xs"
+                        style={{ 
+                          color: selectedChatId === chat.id 
+                            ? '#dbeafe' 
+                            : (isDarkMode ? '#9ca3af' : '#6b7280')
+                        }}
+                      >
                         <Clock className="h-3 w-3" />
                         <span>{formatDate(chat.updated_at)}</span>
                       </div>
@@ -274,11 +370,29 @@ export function ChatList({ selectedChatId, onSelectChat }: ChatListProps) {
                       e.stopPropagation()
                       handleDeleteChat(chat.id)
                     }}
-                    className={`p-2 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 ${
-                      selectedChatId === chat.id 
-                        ? 'text-white hover:bg-white/20' 
-                        : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
-                    }`}
+                    className="p-2 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100"
+                    style={{
+                      color: selectedChatId === chat.id 
+                        ? '#ffffff' 
+                        : (isDarkMode ? '#9ca3af' : '#9ca3af'),
+                      backgroundColor: 'transparent'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedChatId !== chat.id) {
+                        e.target.style.color = '#ef4444'
+                        e.target.style.backgroundColor = isDarkMode ? 'rgba(239, 68, 68, 0.1)' : 'rgba(254, 242, 242, 1)'
+                      } else {
+                        e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedChatId !== chat.id) {
+                        e.target.style.color = isDarkMode ? '#9ca3af' : '#9ca3af'
+                        e.target.style.backgroundColor = 'transparent'
+                      } else {
+                        e.target.style.backgroundColor = 'transparent'
+                      }
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>

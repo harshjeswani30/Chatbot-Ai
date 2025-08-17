@@ -72,10 +72,30 @@ interface ChatInfo {
 
 interface ChatWindowProps {
   chatId: string
+  isDarkMode?: boolean
   onBack: () => void
+  settings?: {
+    autoScroll: boolean
+    messageSound: boolean
+    typingIndicator: boolean
+    compactMode: boolean
+    fontSize: string
+    language: string
+  }
 }
 
-export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
+export function ChatWindow({ chatId, isDarkMode = false, onBack, settings }: ChatWindowProps) {
+  // Default settings if none provided
+  const defaultSettings = {
+    autoScroll: true,
+    messageSound: true,
+    typingIndicator: true,
+    compactMode: false,
+    fontSize: 'medium',
+    language: 'en'
+  }
+  
+  const currentSettings = settings || defaultSettings
   const [message, setMessage] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [likedMessages, setLikedMessages] = useState<Set<string>>(new Set())
@@ -114,7 +134,7 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
     const container = messagesContainerRef.current
     const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100
     
-    if (force || isAtBottom || !isUserScrolling) {
+    if (force || (isAtBottom && currentSettings.autoScroll) || (!isUserScrolling && currentSettings.autoScroll)) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }
@@ -147,8 +167,14 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
   useEffect(() => {
     if (messagesData?.messages?.length > 0) {
       setTimeout(() => scrollToBottom(), 100)
+      
+      // Play notification sound for new bot messages
+      const lastMessage = messagesData.messages[messagesData.messages.length - 1]
+      if (lastMessage && lastMessage.is_bot && currentSettings.messageSound) {
+        playNotificationSound()
+      }
     }
-  }, [messagesData, isUserScrolling])
+  }, [messagesData, isUserScrolling, currentSettings.messageSound])
 
   const handleSendMessage = async () => {
     if (!message.trim() || !userId) return
@@ -271,21 +297,111 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
     })
   }
 
+  // Play notification sound if enabled
+  const playNotificationSound = () => {
+    if (currentSettings.messageSound) {
+      try {
+        // Create a simple notification sound
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+        const oscillator = audioContext.createOscillator()
+        const gainNode = audioContext.createGain()
+        
+        oscillator.connect(gainNode)
+        gainNode.connect(audioContext.destination)
+        
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime)
+        oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1)
+        
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2)
+        
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.2)
+      } catch (error) {
+        console.log('Could not play notification sound:', error)
+      }
+    }
+  }
+
+  // Language translations
+  const translations = {
+    en: {
+      placeholder: "Ask me anything...",
+      thinking: "AI is thinking...",
+      online: "Online • Ready to help",
+      delivered: "Delivered",
+      copyMessage: "Copy message",
+      goodResponse: "Good response",
+      poorResponse: "Poor response",
+      messageCopied: "Message copied!",
+      ready: "Ready",
+      aiOnline: "AI Online",
+      readyToChat: "Ready to chat",
+      loading: "Loading messages...",
+      backToChatList: "Go back to chat list"
+    },
+    es: {
+      placeholder: "Pregúntame lo que quieras...",
+      thinking: "IA está pensando...",
+      online: "En línea • Listo para ayudar",
+      delivered: "Entregado",
+      copyMessage: "Copiar mensaje",
+      goodResponse: "Buena respuesta",
+      poorResponse: "Mala respuesta",
+      messageCopied: "¡Mensaje copiado!",
+      ready: "Listo",
+      aiOnline: "IA en línea",
+      readyToChat: "Listo para chatear",
+      loading: "Cargando mensajes...",
+      backToChatList: "Volver a la lista de chats"
+    },
+    fr: {
+      placeholder: "Demandez-moi n'importe quoi...",
+      thinking: "L'IA réfléchit...",
+      online: "En ligne • Prêt à aider",
+      delivered: "Livré",
+      copyMessage: "Copier le message",
+      goodResponse: "Bonne réponse",
+      poorResponse: "Mauvaise réponse",
+      messageCopied: "Message copié !",
+      ready: "Prêt",
+      aiOnline: "IA en ligne",
+      readyToChat: "Prêt à discuter",
+      loading: "Chargement des messages...",
+      backToChatList: "Retourner à la liste des chats"
+    }
+  }
+
+  const t = translations[currentSettings.language as keyof typeof translations] || translations.en
+
   const messages = messagesData?.messages || []
   const chatInfo = chatData?.chats_by_pk
 
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-gray-500">Loading messages...</div>
+        <div className="text-gray-500">{t.loading}</div>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-50 via-white to-blue-50 relative h-full">
+    <div 
+      className="flex-1 flex flex-col relative h-full transition-all duration-300"
+      style={{
+        background: isDarkMode 
+          ? 'linear-gradient(to bottom right, #1f2937, #111827, #0f172a)' 
+          : 'linear-gradient(to bottom right, #f9fafb, #ffffff, #dbeafe)'
+      }}
+    >
       {/* Chat Header */}
-      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200/50 px-4 sm:px-6 py-4 shadow-sm">
+      <div 
+        className="backdrop-blur-sm border-b px-4 sm:px-6 py-4 shadow-sm transition-all duration-300"
+        style={{
+          backgroundColor: isDarkMode ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+          borderBottomColor: isDarkMode ? 'rgba(75, 85, 99, 0.5)' : 'rgba(229, 231, 235, 0.5)'
+        }}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 sm:space-x-4">
             <button
@@ -300,8 +416,20 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
                 // Call the back function
                 onBack()
               }}
-              className="flex items-center justify-center p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 group min-w-[40px] h-10"
-              aria-label="Go back to chat list"
+              className="flex items-center justify-center p-2 rounded-xl transition-all duration-200 group min-w-[40px] h-10"
+              style={{
+                color: isDarkMode ? '#d1d5db' : '#4b5563',
+                backgroundColor: 'transparent'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.color = '#3b82f6'
+                e.target.style.backgroundColor = isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(219, 234, 254, 1)'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.color = isDarkMode ? '#d1d5db' : '#4b5563'
+                e.target.style.backgroundColor = 'transparent'
+              }}
+              aria-label={t.backToChatList}
             >
               <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform duration-200" />
             </button>
@@ -312,12 +440,15 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
                 </div>
                 <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 bg-green-500 border-2 border-white rounded-full animate-pulse"></div>
               </div>
-              <div className="min-w-0">
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                  {chatInfo?.title || 'AI Chat'}
-                </h2>
-                <p className="text-xs sm:text-sm text-green-600 font-medium">Online • Ready to help</p>
-              </div>
+                                    <div className="min-w-0">
+                        <h2 
+                          className="text-base sm:text-lg font-semibold truncate"
+                          style={{ color: isDarkMode ? '#f3f4f6' : '#111827' }}
+                        >
+                          {chatInfo?.title || 'AI Chat'}
+                        </h2>
+                        <p className="text-xs sm:text-sm text-green-600 font-medium">{t.online}</p>
+                      </div>
             </div>
           </div>
           <div className="hidden sm:flex items-center space-x-2 px-3 py-1 bg-green-50 rounded-full">
@@ -349,7 +480,22 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
           </div>
         ) : (
           <div className="min-h-full flex flex-col justify-end">
-            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <div 
+              className="p-4 sm:p-6"
+              style={{
+                padding: currentSettings.compactMode ? '16px' : '24px',
+                paddingTop: currentSettings.compactMode ? '16px' : '24px',
+                paddingBottom: currentSettings.compactMode ? '16px' : '24px',
+                paddingLeft: currentSettings.compactMode ? '16px' : '24px',
+                paddingRight: currentSettings.compactMode ? '16px' : '24px'
+              }}
+            >
+            <div 
+              style={{
+                display: 'grid',
+                gap: currentSettings.compactMode ? '12px' : '24px'
+              }}
+            >
             {messages.map((msg: Message, index) => (
               <div
                 key={msg.id}
@@ -362,11 +508,22 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
                   }`}
                 >
                   <div
-                    className={`px-5 py-4 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-lg ${
-                      msg.is_bot
-                        ? 'bg-white border border-gray-200/60 text-gray-900 hover:border-gray-300'
-                        : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700'
-                    }`}
+                    className="px-5 py-4 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-lg"
+                    style={{
+                      backgroundColor: msg.is_bot 
+                        ? (isDarkMode ? '#374151' : '#ffffff')
+                        : '',
+                      background: !msg.is_bot 
+                        ? 'linear-gradient(to bottom right, #3b82f6, #2563eb)'
+                        : '',
+                      borderColor: msg.is_bot 
+                        ? (isDarkMode ? '#6b7280' : 'rgba(229, 231, 235, 0.6)')
+                        : 'transparent',
+                      border: msg.is_bot ? '1px solid' : 'none',
+                      color: msg.is_bot 
+                        ? (isDarkMode ? '#f3f4f6' : '#111827')
+                        : '#ffffff'
+                    }}
                   >
                     <div className="flex items-start space-x-3">
                       {msg.is_bot && (
@@ -376,7 +533,13 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
+                        <p 
+                          className="leading-relaxed whitespace-pre-wrap break-words"
+                          style={{
+                            fontSize: currentSettings.fontSize === 'small' ? '12px' : 
+                                     currentSettings.fontSize === 'medium' ? '14px' : '16px'
+                          }}
+                        >{msg.content}</p>
                         
                         {/* Message Actions */}
                         <div className={`flex items-center justify-between mt-3 ${
@@ -392,7 +555,7 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
                               <button 
                                 onClick={() => handleCopyMessage(msg.content)}
                                 className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors duration-200" 
-                                title="Copy message"
+                                title={t.copyMessage}
                               >
                                 <Copy className="h-3.5 w-3.5" />
                               </button>
@@ -403,7 +566,7 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
                                     ? 'bg-green-100 text-green-600 hover:bg-green-200' 
                                     : 'hover:bg-gray-100'
                                 }`}
-                                title="Good response"
+                                title={t.goodResponse}
                               >
                                 <ThumbsUp className="h-3.5 w-3.5" />
                               </button>
@@ -414,7 +577,7 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
                                     ? 'bg-red-100 text-red-600 hover:bg-red-200' 
                                     : 'hover:bg-gray-100'
                                 }`}
-                                title="Poor response"
+                                title={t.poorResponse}
                               >
                                 <ThumbsDown className="h-3.5 w-3.5" />
                               </button>
@@ -428,7 +591,7 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
                                 <div className="h-1 w-1 bg-blue-200 rounded-full"></div>
                                 <div className="h-1 w-1 bg-blue-300 rounded-full"></div>
                               </div>
-                              <span className="text-xs">Delivered</span>
+                              <span className="text-xs">{t.delivered}</span>
                             </div>
                           )}
                         </div>
@@ -441,23 +604,38 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
                     </div>
                   </div>
                   
-                  {/* Message tail/pointer */}
-                  <div className={`absolute top-4 ${
-                    msg.is_bot ? '-left-2' : '-right-2'
-                  }`}>
-                    <div className={`w-0 h-0 ${
-                      msg.is_bot 
-                        ? 'border-r-8 border-r-white border-t-4 border-t-transparent border-b-4 border-b-transparent'
-                        : 'border-l-8 border-l-blue-500 border-t-4 border-t-transparent border-b-4 border-b-transparent'
-                    }`}></div>
-                  </div>
+                                            {/* Message tail/pointer */}
+                          <div className={`absolute top-4 ${
+                            msg.is_bot ? '-left-2' : '-right-2'
+                          }`}>
+                            <div 
+                              className="w-0 h-0"
+                              style={{
+                                borderTop: '4px solid transparent',
+                                borderBottom: '4px solid transparent',
+                                ...(msg.is_bot 
+                                  ? {
+                                      borderRight: `8px solid ${isDarkMode ? '#374151' : '#ffffff'}`
+                                    }
+                                  : {
+                                      borderLeft: '8px solid #3b82f6'
+                                    })
+                              }}
+                            ></div>
+                          </div>
                 </div>
               </div>
             ))}
-            {isSending && (
+            {isSending && currentSettings.typingIndicator && (
               <div className="flex justify-start animate-fade-in">
                 <div className="relative max-w-xs lg:max-w-md mr-12">
-                  <div className="px-5 py-4 rounded-2xl bg-white border border-gray-200/60 shadow-sm">
+                  <div 
+                    className="px-5 py-4 rounded-2xl shadow-sm border"
+                    style={{
+                      backgroundColor: isDarkMode ? '#374151' : '#ffffff',
+                      borderColor: isDarkMode ? '#6b7280' : 'rgba(229, 231, 235, 0.6)'
+                    }}
+                  >
                     <div className="flex items-center space-x-3">
                       <div className="relative h-7 w-7 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-md">
                         <Sparkles className="h-3.5 w-3.5 text-white animate-pulse" />
@@ -468,16 +646,27 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
                         <div className="h-2 w-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                         <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                       </div>
-                      <span className="text-xs text-gray-500 font-medium">AI is thinking...</span>
+                      <span 
+                        className="text-xs font-medium"
+                        style={{ color: isDarkMode ? '#d1d5db' : '#6b7280' }}
+                      >{t.thinking}</span>
                     </div>
                   </div>
                   {/* Message tail */}
                   <div className="absolute top-4 -left-2">
-                    <div className="w-0 h-0 border-r-8 border-r-white border-t-4 border-t-transparent border-b-4 border-b-transparent"></div>
+                    <div 
+                      className="w-0 h-0"
+                      style={{
+                        borderTop: '4px solid transparent',
+                        borderBottom: '4px solid transparent',
+                        borderRight: `8px solid ${isDarkMode ? '#374151' : '#ffffff'}`
+                      }}
+                    ></div>
                   </div>
                 </div>
               </div>
             )}
+            </div>
             </div>
             <div ref={messagesEndRef} />
           </div>
@@ -485,7 +674,13 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
       </div>
 
       {/* Message Input */}
-      <div className="bg-white/95 backdrop-blur-lg border-t border-gray-200/50 p-4 sm:p-6">
+      <div 
+        className="backdrop-blur-lg border-t p-4 sm:p-6 transition-all duration-300"
+        style={{
+          backgroundColor: isDarkMode ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          borderTopColor: isDarkMode ? 'rgba(75, 85, 99, 0.5)' : 'rgba(229, 231, 235, 0.5)'
+        }}
+      >
         <div className="max-w-4xl mx-auto">
           <div className="relative">
             <div className="flex items-end space-x-3 sm:space-x-4">
@@ -494,13 +689,18 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask me anything..."
+                  placeholder={t.placeholder}
                   disabled={isSending}
                   rows={1}
-                  className="w-full px-4 sm:px-5 py-3 sm:py-4 pr-12 sm:pr-16 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 placeholder-gray-400 transition-all duration-200 resize-none min-h-[3rem] sm:min-h-[3.5rem] max-h-32 overflow-y-auto text-sm sm:text-base"
+                  className="w-full px-4 sm:px-5 py-3 sm:py-4 pr-12 sm:pr-16 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 transition-all duration-200 resize-none min-h-[3rem] sm:min-h-[3.5rem] max-h-32 overflow-y-auto text-sm sm:text-base scrollbar-hide"
                   style={{
                     height: 'auto',
-                  }}
+                    backgroundColor: isDarkMode ? '#374151' : '#f9fafb',
+                    borderColor: isDarkMode ? '#6b7280' : '#e5e7eb',
+                    color: isDarkMode ? '#f3f4f6' : '#111827',
+                    border: '1px solid',
+                    '--placeholder-color': isDarkMode ? '#9ca3af' : '#9ca3af'
+                  } as React.CSSProperties}
                   onInput={(e) => {
                     const target = e.target as HTMLTextAreaElement;
                     target.style.height = 'auto';
@@ -511,7 +711,7 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
                   <div className="absolute right-3 sm:right-4 bottom-3 sm:bottom-4">
                     <div className="flex items-center space-x-1">
                       <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="hidden sm:inline text-xs text-gray-500 font-medium">Ready</span>
+                      <span className="hidden sm:inline text-xs text-gray-500 font-medium">{t.ready}</span>
                     </div>
                   </div>
                 )}
@@ -532,11 +732,14 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
               </button>
             </div>
           </div>
-          <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
-            <div className="flex items-center space-x-3 sm:space-x-4 text-xs text-gray-400">
+                            <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
+                    <div 
+                      className="flex items-center space-x-3 sm:space-x-4 text-xs"
+                      style={{ color: isDarkMode ? '#9ca3af' : '#9ca3af' }}
+                    >
               <div className="flex items-center space-x-1">
                 <div className="h-1.5 w-1.5 bg-green-500 rounded-full"></div>
-                <span>AI Online</span>
+                <span>{t.aiOnline}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <Sparkles className="h-3 w-3" />
@@ -544,7 +747,10 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
                 <span className="sm:hidden">GPT-3.5</span>
               </div>
             </div>
-            <p className="text-xs text-gray-400 text-center sm:text-right">
+            <p 
+              className="text-xs text-center sm:text-right"
+              style={{ color: isDarkMode ? '#9ca3af' : '#9ca3af' }}
+            >
               <span className="hidden sm:inline">Press Enter to send • Shift+Enter for new line</span>
               <span className="sm:hidden">Tap send or press Enter</span>
             </p>
@@ -559,7 +765,7 @@ export function ChatWindow({ chatId, onBack }: ChatWindowProps) {
             <div className="h-4 w-4 bg-white rounded-full flex items-center justify-center">
               <div className="h-2 w-2 bg-green-500 rounded-full"></div>
             </div>
-            <span className="text-sm font-medium">Message copied!</span>
+                              <span className="text-sm font-medium">{t.messageCopied}</span>
           </div>
         </div>
       )}
