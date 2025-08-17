@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useAuthenticationStatus } from '@nhost/react'
 import { SignIn } from './components/SignIn'
 import { SignUp } from './components/SignUp'
+import { EmailVerification } from './components/EmailVerification'
 import { ChatApp } from './components/ChatApp'
 import { Loading } from './components/Loading'
 
@@ -24,6 +25,14 @@ function App() {
           <Route 
             path="/signup" 
             element={isAuthenticated ? <Navigate to="/" /> : <SignUp />} 
+          />
+          <Route 
+            path="/verify-email/:token" 
+            element={<EmailVerification />} 
+          />
+          <Route 
+            path="/verify-email" 
+            element={<EmailVerification />} 
           />
           <Route 
             path="/" 

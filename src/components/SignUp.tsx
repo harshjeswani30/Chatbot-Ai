@@ -14,6 +14,8 @@ export function SignUp() {
   const { signUpEmailPassword, isLoading } = useSignUpEmailPassword()
   const navigate = useNavigate()
 
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -28,7 +30,8 @@ export function SignUp() {
       if (error) {
         setError(error.message)
       } else {
-        navigate('/')
+        setShowSuccessMessage(true)
+        // Don't navigate immediately, show success message first
       }
     } catch (err) {
       setError('An unexpected error occurred')
@@ -62,8 +65,43 @@ export function SignUp() {
           </p>
         </div>
         
+        {/* Success Message */}
+        {showSuccessMessage && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl animate-fade-in">
+            <div className="text-center space-y-3">
+              <div className="flex items-center justify-center space-x-2">
+                <div className="h-5 w-5 bg-green-500 rounded-full"></div>
+                <span className="text-lg font-semibold">Account Created Successfully!</span>
+              </div>
+              <div className="space-y-2 text-sm">
+                <p>We've sent a verification email to <strong>{email}</strong></p>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <div className="flex items-start space-x-2">
+                    <div className="h-4 w-4 bg-yellow-500 rounded-full mt-0.5"></div>
+                    <div className="text-left">
+                      <p className="font-medium text-yellow-800">Important: Check Your Spam Folder!</p>
+                      <p className="text-yellow-700 text-xs mt-1">
+                        Verification emails often land in spam/junk folders. Please check there if you don't see it in your inbox.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-green-600">
+                  Click the verification link in the email to activate your account and start chatting!
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/signin')}
+                className="mt-3 w-full flex justify-center items-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
+              >
+                Go to Sign In
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Form */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50">
+        <div className={`bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50 ${showSuccessMessage ? 'hidden' : 'block'}`}>
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl animate-fade-in">
@@ -95,6 +133,9 @@ export function SignUp() {
                     placeholder="Enter your email"
                   />
                 </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  We'll send a verification email to this address. Please use a valid email you can access.
+                </p>
               </div>
               
               <div>
@@ -182,6 +223,22 @@ export function SignUp() {
                   </div>
                 )}
               </button>
+            </div>
+
+            {/* Email Verification Info */}
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <div className="flex items-start space-x-3">
+                <Mail className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium mb-1">What happens next?</p>
+                  <ul className="space-y-1 text-xs">
+                    <li>• We'll send a verification email to your inbox</li>
+                    <li>• <strong>Check your spam/junk folder</strong> if you don't see it</li>
+                    <li>• Click the verification link to activate your account</li>
+                    <li>• Then you can sign in and start chatting!</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </form>
         </div>
