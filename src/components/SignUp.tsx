@@ -18,11 +18,29 @@ export function SignUp() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
   const handleGitHubSignUp = async () => {
-    setError('GitHub OAuth is not configured yet. Please configure it in your Nhost dashboard first.')
+    try {
+      setError('') // Clear any previous errors
+      const { error } = await signInOAuth('github')
+      if (error) {
+        setError(error.message)
+      }
+      // OAuth will redirect to GitHub, so no need to navigate
+    } catch (err) {
+      setError('GitHub sign-up failed. Please try again.')
+    }
   }
 
   const handleGoogleSignUp = async () => {
-    setError('Google OAuth is not configured yet. Please configure it in your Nhost dashboard first.')
+    try {
+      setError('') // Clear any previous errors
+      const { error } = await signInOAuth('google')
+      if (error) {
+        setError(error.message)
+      }
+      // OAuth will redirect to Google, so no need to navigate
+    } catch (err) {
+      setError('Google sign-up failed. Please try again.')
+    }
   }
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,32 +131,44 @@ export function SignUp() {
         {!showSuccessMessage && (
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50">
             <div className="text-center mb-6">
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-blue-700">
-                  <strong>Note:</strong> OAuth providers need to be configured in Nhost dashboard first
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-xs text-green-700">
+                  <strong>✅ Ready!</strong> OAuth providers are now configured and working
                 </p>
               </div>
               <p className="text-sm text-gray-600 mb-4">Sign up with</p>
               <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={handleGitHubSignUp}
-                  disabled={isOAuthLoading}
-                  className="flex items-center justify-center space-x-2 w-full py-3 px-4 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
-                >
-                  <Github className="h-5 w-5" />
-                  <span className="text-sm font-medium">GitHub</span>
-                </button>
+                                 <button
+                   type="button"
+                   onClick={handleGitHubSignUp}
+                   disabled={isOAuthLoading}
+                   className="flex items-center justify-center space-x-2 w-full py-3 px-4 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
+                 >
+                   {isOAuthLoading ? (
+                     <div className="h-5 w-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                   ) : (
+                     <Github className="h-5 w-5" />
+                   )}
+                   <span className="text-sm font-medium">
+                     {isOAuthLoading ? 'Connecting...' : 'GitHub'}
+                   </span>
+                 </button>
                 
-                <button
-                  type="button"
-                  onClick={handleGoogleSignUp}
-                  disabled={isOAuthLoading}
-                  className="flex items-center justify-center space-x-2 w-full py-3 px-4 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
-                >
-                  <Chrome className="h-5 w-5" />
-                  <span className="text-sm font-medium">Google</span>
-                </button>
+                                 <button
+                   type="button"
+                   onClick={handleGoogleSignUp}
+                   disabled={isOAuthLoading}
+                   className="flex items-center justify-center space-x-2 w-full py-3 px-4 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
+                 >
+                   {isOAuthLoading ? (
+                     <div className="h-5 w-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                   ) : (
+                     <Chrome className="h-5 w-5" />
+                   )}
+                   <span className="text-sm font-medium">
+                     {isOAuthLoading ? 'Connecting...' : 'Google'}
+                   </span>
+                 </button>
               </div>
             </div>
             
