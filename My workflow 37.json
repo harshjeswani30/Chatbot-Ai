@@ -1,0 +1,257 @@
+{
+  "name": "My workflow 37",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatbot",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "bac2c5d1-735c-44c6-b8ba-0dc280f0f86f",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "chatbot"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hvetqswlpjltpcqbmnza.hasura.ap-south-1.nhost.run/v1/graphql",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.headers.Authorization }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "query",
+              "value": "mutation CreateChat($title: String!, $userId: uuid!) { insert_chats_one(object: { title: $title, user_id: $userId }) { id title created_at updated_at user_id } }"
+            },
+            {
+              "name": "variables",
+              "value": "={\"content\":\"{{ $json.message }}\",\"chatId\":\"{{ $json.chatId }}\",\"userId\":\"{{ $json.userId }}\"}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"mutation SaveUserMessage($content: String!, $chatId: uuid!, $userId: uuid!) { insert_messages_one(object: { content: $content, role: \\\"user\\\", chat_id: $chatId, user_id: $userId }) { id content role created_at } }\",\n  \"variables\": {\n    \"content\": \"{{ $json.message }}\",\n    \"chatId\": \"{{ $json.chatId }}\",\n    \"userId\": \"{{ $json.userId }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "56ba2732-abd5-4ba5-8a21-c2dc9b607128",
+      "name": "Save User Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "https://harshjeswani.app.n8n.cloud"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-3.5-turbo\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"test message\"\n    }\n  ],\n  \"max_tokens\": 150,\n  \"temperature\": 0.7\n}",
+        "options": {}
+      },
+      "id": "6d2380cb-6aac-4101-bec8-42a1b5ff84a3",
+      "name": "OpenRouter API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hvetqswlpjltpcqbmnza.hasura.ap-south-1.nhost.run/v1/graphql",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.headers.Authorization }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "query",
+              "value": "mutation SaveAIResponse($content: String!, $chatId: uuid!, $userId: uuid!) { insert_messages_one(object: { content: $content, role: \"assistant\", chat_id: $chatId, user_id: $userId }) { id } }"
+            },
+            {
+              "name": "variables",
+              "value": "={\"content\":\"{{ $('OpenRouter API').item.json.choices[0].message.content }}\",\"chatId\":\"{{ $json.chatId }}\",\"userId\":\"{{ $json.userId }}\"}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"mutation SaveAIResponse($content: String!, $chatId: uuid!, $userId: uuid!) { insert_messages_one(object: { content: $content, role: \\\"assistant\\\", chat_id: $chatId, user_id: $userId }) { id } }\",\n  \"variables\": {\n    \"content\": \"{{ $('OpenRouter API').item.json.choices[0].message.content }}\",\n    \"chatId\": \"{{ $json.chatId }}\",\n    \"userId\": \"{{ $json.userId }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "9e837353-5716-4b7c-90f2-23cbab02a6af",
+      "name": "Save AI Response",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "success",
+              "value": "true"
+            },
+            {
+              "name": "message",
+              "value": "Message processed successfully"
+            },
+            {
+              "name": "response",
+              "value": "={{ $('OpenRouter API').item.json.choices[0].message.content }}"
+            },
+            {
+              "name": "messageId",
+              "value": "={{ $('Save AI Response').item.json.body.data.insert_messages_one.id }}"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "debug",
+              "value": "={{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8660cf93-6eae-4dc0-8496-c19cc9d4cc90",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        880,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1088,
+        0
+      ],
+      "id": "046e7441-9339-4fc4-af00-ae41dca0bce6",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Save User Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save User Message": {
+      "main": [
+        [
+          {
+            "node": "OpenRouter API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter API": {
+      "main": [
+        [
+          {
+            "node": "Save AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save AI Response": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "80548e4a-b06d-4df0-9a27-98003dace67e",
+  "meta": {
+    "instanceId": "34f477970b381333e04e8c45cbc8e2bce9c3ac0d99bd781cdc04641e8780f98b"
+  },
+  "id": "1rPJwYxpxSfNPZYR",
+  "tags": []
+}

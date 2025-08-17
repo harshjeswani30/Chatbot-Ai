@@ -1,0 +1,47 @@
+# Hasura Actions Configuration
+# This defines the sendMessage action that will trigger n8n
+
+actions:
+  - name: sendMessage
+    definition:
+      kind: synchronous
+      handler: "{{NHOST_BACKEND_URL}}/actions/sendMessage"
+      forward_client_headers: true
+      headers:
+        - name: "x-hasura-admin-secret"
+          value: "{{NHOST_ADMIN_SECRET}}"
+    permissions:
+      - role: user
+        definition:
+          check:
+            chat_id:
+              _exists:
+                _table:
+                  schema: public
+                  name: chats
+                _where:
+                  id: $chat_id
+                  user_id: X-Hasura-User-Id
+    type: sendMessageInput
+
+# Custom types for the action
+custom_types:
+  input_objects:
+    - name: sendMessageInput
+      fields:
+        - name: chat_id
+          type: uuid!
+        - name: content
+          type: String!
+        - name: user_id
+          type: uuid!
+  
+  objects:
+    - name: sendMessageOutput
+      fields:
+        - name: success
+          type: Boolean!
+        - name: message
+          type: String!
+        - name: bot_response
+          type: String

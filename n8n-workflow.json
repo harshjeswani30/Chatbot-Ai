@@ -1,0 +1,197 @@
+{
+  "name": "Chatbot Workflow - Full Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatbot",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "chatbot"
+    },
+
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "https://harshjeswani.app.n8n.cloud"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-3.5-turbo\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a helpful AI assistant. Provide concise and helpful responses.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.body.input.input.content }}\"\n    }\n  ],\n  \"max_tokens\": 150,\n  \"temperature\": 0.7\n}",
+        "options": {}
+      },
+      "id": "call-openrouter",
+      "name": "Call OpenRouter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Debug: Log all incoming data from Hasura\nconsole.log('=== WEBHOOK TRIGGER DATA ===');\nconsole.log('Full JSON:', JSON.stringify($input.first().json, null, 2));\n\n// Return the data unchanged for next node\nreturn $input.first().json;"
+      },
+      "id": "debug-data",
+      "name": "Debug Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://jxchtsdhfygxvxsoblcw.hasura.ap-south-1.nhost.run/v1/graphql",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-hasura-admin-secret",
+              "value": "lz(==9H^nlWW%N-uURQPx&S;wg18)VXH"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"mutation { insert_messages_one(object: { content: \\\"{{ $('Call OpenRouter').first().json.choices[0].message.content }}\\\", is_bot: true, chat_id: \\\"{{ $('Webhook Trigger').first().json.body.input.input.chat_id }}\\\", user_id: \\\"{{ $('Webhook Trigger').first().json.body.input.input.user_id }}\\\" }) { id content created_at } }\"\n}",
+        "options": {}
+      },
+      "id": "save-bot-response",
+      "name": "Save Bot Response",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "boolean": [
+            {
+              "name": "success",
+              "value": true
+            }
+          ],
+          "string": [
+            {
+              "name": "message",
+              "value": "Message processed successfully"
+            },
+            {
+              "name": "bot_response",
+              "value": "={{ $('Call OpenRouter').first().json.choices[0].message.content }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1020, 300]
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [1140, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Debug Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Debug Data": {
+      "main": [
+        [
+          {
+            "node": "Call OpenRouter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call OpenRouter": {
+      "main": [
+        [
+          {
+            "node": "Save Bot Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Bot Response": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "your-instance-id"
+  },
+  "id": "chatbot-workflow",
+  "tags": []
+}

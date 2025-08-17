@@ -1,0 +1,145 @@
+# Hasura Metadata Configuration for Nhost
+# This file contains all the necessary configurations for tables, permissions, and actions
+
+version: 3
+sources:
+  - name: default
+    kind: postgres
+    tables:
+      - table:
+          schema: public
+          name: chats
+        array_relationships: []
+        object_relationships: []
+        select_permissions:
+          - role: user
+            permission:
+              columns:
+                - id
+                - title
+                - user_id
+                - created_at
+                - updated_at
+              filter:
+                user_id:
+                  _eq: X-Hasura-User-Id
+        insert_permissions:
+          - role: user
+            permission:
+              check:
+                user_id:
+                  _eq: X-Hasura-User-Id
+              columns:
+                - title
+                - user_id
+        update_permissions:
+          - role: user
+            permission:
+              columns:
+                - title
+                - updated_at
+              filter:
+                user_id:
+                  _eq: X-Hasura-User-Id
+        delete_permissions:
+          - role: user
+            permission:
+              filter:
+                user_id:
+                  _eq: X-Hasura-User-Id
+
+      - table:
+          schema: public
+          name: messages
+        array_relationships:
+          - name: chat
+            using:
+              foreign_key_constraint_on: chat_id
+        object_relationships:
+          - name: chat
+            using:
+              foreign_key_constraint_on: chat_id
+        select_permissions:
+          - role: user
+            permission:
+              columns:
+                - id
+                - chat_id
+                - content
+                - is_bot
+                - user_id
+                - created_at
+              filter:
+                chat:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+        insert_permissions:
+          - role: user
+            permission:
+              check:
+                chat:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+              columns:
+                - chat_id
+                - content
+                - is_bot
+                - user_id
+
+actions:
+  - name: sendMessage
+    definition:
+      kind: synchronous
+      handler: "{{NHOST_BACKEND_URL}}/actions/sendMessage"
+      forward_client_headers: true
+      headers:
+        - name: "x-hasura-admin-secret"
+          value: "{{NHOST_ADMIN_SECRET}}"
+    permissions:
+      - role: user
+        definition:
+          check:
+            chat_id:
+              _exists:
+                _table:
+                  schema: public
+                  name: chats
+                _where:
+                  id: $chat_id
+                  user_id: X-Hasura-User-Id
+
+custom_types:
+  input_objects:
+    - name: sendMessageInput
+      fields:
+        - name: chat_id
+          type: uuid!
+        - name: content
+          type: String!
+        - name: user_id
+          type: uuid!
+  
+  objects:
+    - name: sendMessageOutput
+      fields:
+        - name: success
+          type: Boolean!
+        - name: message
+          type: String!
+        - name: bot_response
+          type: String
+
+# Enable subscriptions for real-time updates
+sources:
+  - name: default
+    kind: postgres
+    configuration:
+      connection_info:
+        database_url: "{{NHOST_DATABASE_URL}}"
+        isolation_level: read-committed
+        pool_settings:
+          max_connections: 50
+          idle_timeout: 180
+          retries: 1
+          pool_timeout: 360
+          connection_lifetime: 600
