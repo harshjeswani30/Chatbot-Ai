@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useSignInEmailPassword } from '@nhost/react'
-import { Mail, Lock, Eye, EyeOff, Sparkles, Bot, ArrowRight } from 'lucide-react'
+import { useSignInEmailPassword, useSignInOtp, useSignInOAuth } from '@nhost/react'
+import { Mail, Lock, Eye, EyeOff, Sparkles, Bot, ArrowRight, Github, Chrome } from 'lucide-react'
 
 export function SignIn() {
   const [email, setEmail] = useState('')
@@ -10,7 +10,16 @@ export function SignIn() {
   const [error, setError] = useState('')
   
   const { signInEmailPassword, isLoading } = useSignInEmailPassword()
+  const { signInOAuth, isLoading: isOAuthLoading } = useSignInOAuth()
   const navigate = useNavigate()
+
+  const handleGitHubSignIn = async () => {
+    setError('GitHub OAuth is not configured yet. Please configure it in your Nhost dashboard first.')
+  }
+
+  const handleGoogleSignIn = async () => {
+    setError('Google OAuth is not configured yet. Please configure it in your Nhost dashboard first.')
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,7 +64,49 @@ export function SignIn() {
           </p>
         </div>
         
-        {/* Form */}
+        {/* OAuth Sign-in Options */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50">
+          <div className="text-center mb-6">
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-700">
+                <strong>Note:</strong> OAuth providers need to be configured in Nhost dashboard first
+              </p>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">Sign in with</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={handleGitHubSignIn}
+                disabled={isOAuthLoading}
+                className="flex items-center justify-center space-x-2 w-full py-3 px-4 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                <Github className="h-5 w-5" />
+                <span className="text-sm font-medium">GitHub</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={isOAuthLoading}
+                className="flex items-center justify-center space-x-2 w-full py-3 px-4 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                <Chrome className="h-5 w-5" />
+                <span className="text-sm font-medium">Google</span>
+              </button>
+            </div>
+          </div>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Email/Password Form */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
