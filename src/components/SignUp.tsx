@@ -16,9 +16,8 @@ export function SignUp() {
 
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   
-  // Debug: Log the current state
-  console.log('SignUp component - showSuccessMessage:', showSuccessMessage)
-  console.log('SignUp component - OAuth section should be visible')
+     // Debug: Log the current state
+   console.log('SignUp component - showSuccessMessage:', showSuccessMessage)
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
